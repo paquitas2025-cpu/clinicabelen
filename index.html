@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema Médico</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/config.js"></script>
+</head>
+<body class="login-body">
+    <div class="card card-login">
+        <div class="text-center" style="text-align:center; margin-bottom: 24px;">
+            <div class="logo">Sistema Médico</div>
+            <small style="color:#888;">Ingreso al sistema</small>
+        </div>
+
+        <div id="alertBox" class="alert alert-danger" style="display:none;"></div>
+
+        <form id="loginForm">
+            <label class="form-label">Usuario</label>
+            <input type="text" id="usuario" class="form-control" placeholder="admin" required>
+
+            <label class="form-label">Contraseña</label>
+            <input type="password" id="password" class="form-control" placeholder="••••••" required>
+
+            <button type="submit" id="btnLogin" class="btn btn-primary">Ingresar</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const alertBox = document.getElementById('alertBox');
+        const btnLogin = document.getElementById('btnLogin');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            alertBox.style.display = 'none';
+            btnLogin.disabled = true;
+            btnLogin.textContent = 'Ingresando...';
+
+            const usuario = document.getElementById('usuario').value.trim();
+            const password = document.getElementById('password').value;
+
+            // El usuario se loguea con email: {usuario}@clinica.local
+            const email = `${usuario}@clinica.local`;
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) {
+                alertBox.textContent = 'Usuario o contraseña incorrectos';
+                alertBox.style.display = 'block';
+                btnLogin.disabled = false;
+                btnLogin.textContent = 'Ingresar';
+                return;
+            }
+
+            // Obtener perfil para saber el rol
+            const profile = await getUserProfile();
+            if (!profile) {
+                await supabase.auth.signOut();
+                alertBox.textContent = 'Error al obtener perfil de usuario';
+                alertBox.style.display = 'block';
+                btnLogin.disabled = false;
+                btnLogin.textContent = 'Ingresar';
+                return;
+            }
+
+            const rutas = {
+                1: '/admin/',
+                2: '/medico/',
+                3: '/archivos/',
+            };
+            window.location.href = rutas[profile.rol_id] || '/index.html';
+        });
+
+        // Si ya hay sesión activa, redirigir
+        (async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                const profile = await getUserProfile();
+                if (profile) {
+                    const rutas = { 1: '/admin/', 2: '/medico/', 3: '/archivos/' };
+                    window.location.href = rutas[profile.rol_id] || '/index.html';
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

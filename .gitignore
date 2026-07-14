@@ -1,0 +1,14 @@
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# Directorios de uploads (versión legacy PHP)
+uploads/
+
+# Node (por si acaso)
+node_modules/
+
+# IDE
+.vscode/
+.idea/

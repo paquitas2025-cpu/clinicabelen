@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Médico</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../js/config.js"></script>
+</head>
+<body>
+    <header>
+        <div>
+            <h2>Panel Médico Ocupacional</h2>
+            <span class="user-info" id="userInfo"></span>
+        </div>
+        <button class="btn btn-danger" onclick="logout()">Cerrar sesión</button>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>Bienvenido</h2>
+            <p style="color:#666; margin-top:12px;">
+            </p>
+        </div>
+    </div>
+
+    <script>
+        (async () => {
+            const session = await checkAuth();
+            if (!session) return;
+
+            const profile = await getUserProfile();
+            if (!profile || profile.rol_id !== 2) {
+                window.location.href = '/index.html';
+                return;
+            }
+            document.getElementById('userInfo').textContent =
+                `👤 ${profile.usuario} · ${profile.rol}`;
+        })();
+    </script>
+</body>
+</html>

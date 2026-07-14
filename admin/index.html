@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../js/config.js"></script>
+</head>
+<body>
+    <header>
+        <div>
+            <h2>Panel Administrativo</h2>
+            <span class="user-info" id="userInfo"></span>
+        </div>
+        <button class="btn btn-danger" onclick="logout()">Cerrar sesión</button>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>Bienvenido al área administrativa</h2>
+            <p style="color:#666; margin-top:12px;">
+                Desde acá podés gestionar usuarios, empresas y trabajadores del sistema.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        (async () => {
+            const session = await checkAuth();
+            if (!session) return;
+
+            const profile = await getUserProfile();
+            if (!profile || profile.rol_id !== 1) {
+                window.location.href = '/index.html';
+                return;
+            }
+            document.getElementById('userInfo').textContent =
+                `👤 ${profile.usuario} · ${profile.rol}`;
+        })();
+    </script>
+</body>
+</html>

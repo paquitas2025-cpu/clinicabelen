@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel - Encargado de Archivos</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../js/config.js"></script>
+</head>
+<body>
+    <header>
+        <div>
+            <h2>Panel – Encargado de Archivos</h2>
+            <span class="user-info" id="userInfo"></span>
+        </div>
+        <button class="btn btn-danger" onclick="logout()">Cerrar sesión</button>
+    </header>
+
+    <div class="container">
+        <div id="alertBox" class="alert" style="display:none;"></div>
+
+        <div class="card">
+            <h2>Subir archivo médico</h2>
+
+            <form id="uploadForm">
+                <label>Seleccionar Trabajador</label>
+                <select id="trabajador_id" required>
+                    <option value="">-- Seleccione --</option>
+                </select>
+
+                <div class="section-box">
+                    <label>CAMO</label>
+                    <input type="file" name="CAMO" accept="application/pdf">
+
+                    <label>EMO</label>
+                    <input type="file" name="EMO" accept="application/pdf">
+
+                    <label>LABORATORIO</label>
+                    <input type="file" name="LABORATORIO" accept="application/pdf">
+
+                    <label>OFTALMOLOGÍA</label>
+                    <input type="file" name="OFTALMOLOGIA" accept="application/pdf">
+
+                    <label>RESUMEN</label>
+                    <input type="file" name="RESUMEN" accept="application/pdf">
+
+                    <label>OBSERVACIONES</label>
+                    <input type="file" name="OBSERVACIONES" accept="application/pdf">
+
+                    <label>CONCLUSIONES</label>
+                    <input type="file" name="CONCLUSIONES" accept="application/pdf">
+                </div>
+
+                <button type="submit" id="btnSubmit" class="btn btn-primary">
+                    Guardar Resultados
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const TIPOS_DOCUMENTO = [
+            'CAMO', 'EMO', 'LABORATORIO', 'OFTALMOLOGIA',
+            'RESUMEN', 'OBSERVACIONES', 'CONCLUSIONES'
+        ];
+        const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+
+        let profile = null;
+        let trabajadores = [];
+
+        // ---- Mostrar alerta ----
+        function showAlert(msg, type = 'danger') {
+            const box = document.getElementById('alertBox');
+            box.className = `alert alert-${type}`;
+            box.textContent = msg;
+            box.style.display = 'block';
+        }
+
+        // ---- Cargar trabajadores ----
+        async function loadTrabajadores() {
+            const { data, error } = await supabase
+                .from('trabajadores')
+                .select('id, nombres, apellidos')
+                .order('apellidos', { ascending: true });
+
+            if (error) { showAlert('Error al cargar trabajadores: ' + error.message); return; }
+            trabajadores = data || [];
+
+            const sel = document.getElementById('trabajador_id');
+            sel.innerHTML = '<option value="">-- Seleccione --</option>';
+            trabajadores.forEach(t => {
+                sel.innerHTML += `<option value="${t.id}">${t.apellidos} ${t.nombres}</option>`;
+            });
+        }
+
+        // ---- Subir archivos ----
+        async function uploadFiles(trabajadorId, empresaId) {
+            const ok = [];
+            const errors = [];
+
+            for (const codigo of TIPOS_DOCUMENTO) {
+                const input = document.querySelector(`input[name="${codigo}"]`);
+                if (!input || !input.files || !input.files[0]) continue;
+
+                const file = input.files[0];
+
+                if (file.type !== 'application/pdf') {
+                    errors.push(`${codigo}: solo PDF`);
+                    continue;
+                }
+                if (file.size > MAX_SIZE) {
+                    errors.push(`${codigo}: excede 10 MB`);
+                    continue;
+                }
+
+                // Obtener tipo_documento_id
+                const { data: tipoRow } = await supabase
+                    .from('tipos_documento')
+                    .select('id')
+                    .eq('codigo', codigo)
+                    .single();
+
+                if (!tipoRow) {
+                    errors.push(`${codigo}: tipo no registrado`);
+                    continue;
+                }
+
+                // Storage path
+                const timestamp = Date.now();
+                const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                const storagePath = `empresa_${empresaId}/trabajador_${trabajadorId}/${codigo}/${timestamp}_${safeName}`;
+
+                // Upload a Supabase Storage
+                const { error: uploadError } = await supabase.storage
+                    .from('archivos-medicos')
+                    .upload(storagePath, file, {
+                        contentType: 'application/pdf',
+                        cacheControl: '3600'
+                    });
+
+                if (uploadError) {
+                    errors.push(`${codigo}: error al subir (${uploadError.message})`);
+                    continue;
+                }
+
+                // Guardar registro en archivos_medicos
+                const { error: insertError } = await supabase
+                    .from('archivos_medicos')
+                    .insert({
+                        trabajador_id: trabajadorId,
+                        tipo_documento_id: tipoRow.id,
+                        nombre_archivo: `${timestamp}_${safeName}`,
+                        ruta_archivo: storagePath,
+                        usuario_id: profile.id
+                    });
+
+                if (insertError) {
+                    errors.push(`${codigo}: error al guardar (${insertError.message})`);
+                } else {
+                    ok.push(codigo);
+                }
+            }
+
+            return { ok, errors };
+        }
+
+        // ---- INIT ----
+        (async () => {
+            const session = await checkAuth();
+            if (!session) return;
+
+            profile = await getUserProfile();
+            if (!profile || profile.rol_id !== 3) {
+                window.location.href = '/index.html';
+                return;
+            }
+            document.getElementById('userInfo').textContent =
+                `👤 ${profile.usuario} · ${profile.rol}`;
+
+            await loadTrabajadores();
+        })();
+
+        // ---- SUBMIT ----
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Subiendo...';
+
+            const trabajadorId = parseInt(document.getElementById('trabajador_id').value);
+            if (!trabajadorId) {
+                showAlert('Debe seleccionar un trabajador');
+                btn.disabled = false;
+                btn.textContent = 'Guardar Resultados';
+                return;
+            }
+
+            // Obtener empresa del trabajador
+            const trabajador = trabajadores.find(t => t.id === trabajadorId);
+            if (!trabajador) {
+                showAlert('Trabajador no encontrado');
+                btn.disabled = false;
+                btn.textContent = 'Guardar Resultados';
+                return;
+            }
+
+            const { data: empData } = await supabase
+                .from('trabajadores')
+                .select('empresa_id')
+                .eq('id', trabajadorId)
+                .single();
+
+            const empresaId = empData?.empresa_id;
+            if (!empresaId) {
+                showAlert('El trabajador no tiene empresa asignada');
+                btn.disabled = false;
+                btn.textContent = 'Guardar Resultados';
+                return;
+            }
+
+            const { ok, errors } = await uploadFiles(trabajadorId, empresaId);
+
+            if (ok.length > 0) {
+                showAlert(`✅ ${ok.length} archivo(s) subido(s) correctamente: ${ok.join(', ')}`, 'success');
+                // Limpiar inputs
+                TIPOS_DOCUMENTO.forEach(c => {
+                    const input = document.querySelector(`input[name="${c}"]`);
+                    if (input) input.value = '';
+                });
+            }
+
+            if (errors.length > 0) {
+                showAlert(`⚠️ ${errors.join(' | ')}`);
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Guardar Resultados';
+        });
+    </script>
+</body>
+</html>
