@@ -19,44 +19,95 @@
     </style>
 </head>
 <body>
-    <header>
-        <div>
-            <h2>Panel Administrativo</h2>
-            <span class="user-info" id="userInfo"></span>
-        </div>
-        <button class="btn btn-danger" onclick="logout()">Cerrar sesión</button>
-    </header>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="brand"><div style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:800;">A</div> Archivos</div>
+            <div style="font-size:13px; opacity:0.85;">Centro Médico Belén</div>
+            <nav>
+                <a class="nav-item active" href="index.html"><span class="icon">🏠</span> <span>Dashboard</span></a>
+                <a class="nav-item" href="trabajadores.html"><span class="icon">👷</span> <span>Trabajadores</span></a>
+                <a class="nav-item" href="usuarios.html"><span class="icon">👤</span> <span>Usuarios</span></a>
+                <a class="nav-item" href="empresas.html"><span class="icon">🏢</span> <span>Empresas</span></a>
+                <a class="nav-item" href="../archivos/index.html"><span class="icon">📁</span> <span>Subir Archivos</span></a>
+            </nav>
 
-    <div class="container">
-        <h2 style="margin-bottom:4px;">Bienvenido</h2>
-        <p style="color:#666; margin-bottom:0;">Seleccioná una sección para gestionar</p>
+            <div class="user-block">
+                <div class="name" id="sidebarUser">Usuario</div>
+                <div style="font-size:13px; opacity:0.85;">Encargado de Archivos</div>
+                <button class="logout" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </aside>
 
-        <div class="dashboard-grid">
-            <div class="dash-card">
-                <div class="icon">👥</div>
-                <h3>Usuarios</h3>
-                <p>Gestionar usuarios del sistema</p>
-                <span class="count" id="countUsuarios">-</span>
-                <p style="font-size:12px;color:#999;margin-top:4px;">registrados</p>
-                <a href="usuarios.html" class="dash-link">Ir a Usuarios →</a>
+        <main class="main-content">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:20px;">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p style="color:#97a0aa; margin-top:4px;">Accesos y resumen rápido del sistema</p>
+                </div>
+                <div style="text-align:right; color:#97a0aa;">14 de January, 2026</div>
             </div>
-            <div class="dash-card">
-                <div class="icon">🏢</div>
-                <h3>Empresas</h3>
-                <p>Gestionar empresas registradas</p>
-                <span class="count" id="countEmpresas">-</span>
-                <p style="font-size:12px;color:#999;margin-top:4px;">registradas</p>
-                <a href="empresas.html" class="dash-link">Ir a Empresas →</a>
+
+            <div class="stats-row">
+                <div class="stat">
+                    <div class="s-ico">👥</div>
+                    <div>
+                        <div class="s-num" id="countTrabajadores">-</div>
+                        <div class="s-label">Trabajadores Activos</div>
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="s-ico">📄</div>
+                    <div>
+                        <div class="s-num" id="countArchivos">-</div>
+                        <div class="s-label">Archivos Totales</div>
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="s-ico">⬆️</div>
+                    <div>
+                        <div class="s-num" id="countHoy">-</div>
+                        <div class="s-label">Subidos Hoy</div>
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="s-ico">📊</div>
+                    <div>
+                        <div class="s-num" id="avgPorTrabajador">-</div>
+                        <div class="s-label">Promedio por Trabajador</div>
+                    </div>
+                </div>
             </div>
-            <div class="dash-card">
-                <div class="icon">👷</div>
-                <h3>Trabajadores</h3>
-                <p>Gestionar trabajadores</p>
-                <span class="count" id="countTrabajadores">-</span>
-                <p style="font-size:12px;color:#999;margin-top:4px;">registrados</p>
-                <a href="trabajadores.html" class="dash-link">Ir a Trabajadores →</a>
+
+            <h2>Accesos Rápidos</h2>
+            <div class="quick-grid">
+                <div class="quick-item">
+                    <div class="big-ico">➕</div>
+                    <h4>Nuevo Trabajador</h4>
+                    <p>Registrar nuevo trabajador en el sistema</p>
+                </div>
+                <div class="quick-item">
+                    <div class="big-ico">📤</div>
+                    <h4>Subir Archivos</h4>
+                    <p>Cargar documentos médicos</p>
+                </div>
+                <div class="quick-item">
+                    <div class="big-ico">👤</div>
+                    <h4>Agregar Usuarios</h4>
+                    <p>Registrar nuevo usuario</p>
+                </div>
+                <div class="quick-item">
+                    <div class="big-ico">🏢</div>
+                    <h4>Nueva Empresa</h4>
+                    <p>Registrar nueva empresa en el sistema</p>
+                </div>
+
+                <div class="quick-item">
+                    <div class="big-ico">🔎</div>
+                    <h4>Buscar Trabajador</h4>
+                    <p>Ver y editar información de trabajadores</p>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
@@ -67,16 +118,43 @@
 
                 var profile = await getUserProfile();
                 if (!profile || profile.rol_id !== 1) { window.location.href = '/index.html'; return; }
-                document.getElementById('userInfo').textContent = profile.usuario + ' · ' + profile.rol;
+                document.getElementById('sidebarUser').textContent = profile.usuario;
 
-                var u = await supabase.from('usuarios').select('id', { count: 'exact' });
-                if (u.count) document.getElementById('countUsuarios').textContent = u.count;
+                // Trabajadores
+                try {
+                    var t = await supabase.from('trabajadores').select('id');
+                    var trabajadoresCount = (t && t.data) ? t.data.length : 0;
+                    document.getElementById('countTrabajadores').textContent = trabajadoresCount;
+                } catch (_) { document.getElementById('countTrabajadores').textContent = '0'; }
 
-                var e = await supabase.from('empresas').select('id', { count: 'exact' });
-                if (e.count) document.getElementById('countEmpresas').textContent = e.count;
+                // Archivos totales y hoy
+                try {
+                    var a = await supabase.from('archivos').select('id, created_at');
+                    var archivosCount = (a && a.data) ? a.data.length : 0;
+                    document.getElementById('countArchivos').textContent = archivosCount;
 
-                var t = await supabase.from('trabajadores').select('id', { count: 'exact' });
-                if (t.count) document.getElementById('countTrabajadores').textContent = t.count;
+                    var hoy = new Date().toDateString();
+                    var subidosHoy = (a && a.data) ? a.data.filter(function(r){ return r.created_at && new Date(r.created_at).toDateString() === hoy; }).length : 0;
+                    document.getElementById('countHoy').textContent = subidosHoy;
+
+                    var avg = trabajadoresCount ? (archivosCount / trabajadoresCount) : 0;
+                    document.getElementById('avgPorTrabajador').textContent = avg ? avg.toFixed(1) : '0.0';
+                } catch (e) {
+                    document.getElementById('countArchivos').textContent = '0';
+                    document.getElementById('countHoy').textContent = '0';
+                    document.getElementById('avgPorTrabajador').textContent = '0.0';
+                }
+
+                // small graceful fallback for quick actions links (make them clickable)
+                document.querySelectorAll('.quick-item').forEach(function (el, idx) {
+                    el.style.cursor = 'pointer';
+                    el.addEventListener('click', function () {
+                        var map = ['trabajadores.html','../archivos/index.html','usuarios.html','empresas.html','trabajadores.html'];
+                        var target = map[idx] || 'index.html';
+                        window.location.href = target;
+                    });
+                });
+
             } catch (e) { console.error(e); }
         })();
     </script>
