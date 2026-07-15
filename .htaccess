@@ -1,0 +1,12 @@
+# Centro Médico Belén - Apache config
+Options -Indexes
+DirectoryIndex index.html
+
+# Rutas amigables
+RewriteEngine On
+RewriteBase /
+
+# Redirigir /admin -> /admin/
+RewriteRule ^admin$ admin/ [L,R=301]
+RewriteRule ^medico$ medico/ [L,R=301]
+RewriteRule ^archivos$ archivos/ [L,R=301]

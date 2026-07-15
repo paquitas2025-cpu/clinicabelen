@@ -3,25 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Médico</title>
+    <title>Panel Médico · Centro Médico Belén</title>
     <link rel="stylesheet" href="../css/style.css">
     <script src="../js/config.js"></script>
 </head>
 <body>
-    <header>
-        <div>
-            <h2>Panel Médico Ocupacional</h2>
-            <span class="user-info" id="userInfo"></span>
-        </div>
-        <button class="btn btn-danger" onclick="logout()">Cerrar sesión</button>
-    </header>
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Menú">☰</button>
 
-    <div class="container">
-        <div class="card">
-            <h2>Bienvenido</h2>
-            <p style="color:#666; margin-top:12px;">
-            </p>
-        </div>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-logo">CB</div>
+                <div class="sidebar-brand-text">
+                    <h2>Centro Médico<br>Belén</h2>
+                    <span>Panel Médico</span>
+                </div>
+            </div>
+
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar" id="sidebarAvatar">M</div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name" id="sidebarUser">Médico</div>
+                    <div class="sidebar-user-role">Profesional de la Salud</div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-section">Menú</div>
+                <a class="nav-item active" href="index.html">
+                    <span class="nav-icon">🏠</span> Inicio
+                </a>
+                <a class="nav-item" href="../archivos/index.html">
+                    <span class="nav-icon">📁</span> Archivos Médicos
+                </a>
+
+                <div style="flex:1;"></div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <span>🚪</span> Cerrar Sesión
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Panel Médico Ocupacional</h1>
+                    <p>Bienvenido al sistema de gestión clínica</p>
+                </div>
+                <div class="page-header-actions">
+                    <span style="font-size:13px;color:var(--slate-500);font-weight:500;" id="fechaActual"></span>
+                </div>
+            </div>
+
+            <!-- Welcome Card -->
+            <div class="card" style="padding:32px;margin-bottom:24px;">
+                <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+                    <div style="width:72px;height:72px;border-radius:var(--radius-lg);background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 8px 24px rgba(37,99,235,0.2);flex-shrink:0;">
+                        🩺
+                    </div>
+                    <div style="flex:1;">
+                        <h2 style="font-size:22px;font-weight:700;color:var(--slate-900);margin-bottom:4px;" id="welcomeMessage">Bienvenido, Doctor</h2>
+                        <p style="color:var(--slate-500);font-size:14px;">Has iniciado sesión como <strong style="color:var(--slate-700);" id="userRol">Médico</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="metrics-grid">
+                <div class="metric-card blue">
+                    <div class="metric-card-header">
+                        <div class="metric-icon">👥</div>
+                    </div>
+                    <div class="metric-value" id="countPacientes">-</div>
+                    <div class="metric-label">Pacientes Atendidos</div>
+                </div>
+
+                <div class="metric-card green">
+                    <div class="metric-card-header">
+                        <div class="metric-icon">📄</div>
+                    </div>
+                    <div class="metric-value" id="countExamenes">-</div>
+                    <div class="metric-label">Exámenes Realizados</div>
+                </div>
+
+                <div class="metric-card amber">
+                    <div class="metric-card-header">
+                        <div class="metric-icon">⏳</div>
+                    </div>
+                    <div class="metric-value" id="countPendientes">-</div>
+                    <div class="metric-label">Pendientes de Revisión</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="page-header" style="margin-bottom:16px;margin-top:8px;">
+                <div class="page-header-left">
+                    <h1 style="font-size:20px;">Acciones Rápidas</h1>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+                <div class="card" style="cursor:pointer;padding:24px;text-align:center;" onclick="window.location.href='../archivos/index.html'">
+                    <div style="font-size:36px;margin-bottom:12px;">📋</div>
+                    <h4 style="font-size:15px;font-weight:700;color:var(--slate-900);margin-bottom:4px;">Revisar Archivos</h4>
+                    <p style="font-size:13px;color:var(--slate-500);">Ver documentos médicos pendientes</p>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
@@ -34,8 +125,33 @@
                 window.location.href = '/index.html';
                 return;
             }
-            document.getElementById('userInfo').textContent =
-                `👤 ${profile.usuario} · ${profile.rol}`;
+
+            document.getElementById('sidebarUser').textContent = profile.usuario;
+            document.getElementById('sidebarAvatar').textContent = profile.usuario.charAt(0).toUpperCase();
+            document.getElementById('welcomeMessage').textContent = `Bienvenido, ${profile.usuario}`;
+            document.getElementById('userRol').textContent = profile.rol;
+            document.getElementById('sidebarToggle').addEventListener('click', function () {
+                document.getElementById('sidebar').classList.toggle('open');
+            });
+
+            // Fecha actual
+            var ahora = new Date();
+            document.getElementById('fechaActual').textContent = ahora.toLocaleDateString('es-PE', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            // Stats - contar trabajadores (como pacientes)
+            try {
+                var t = await supabase.from('trabajadores').select('id');
+                document.getElementById('countPacientes').textContent = (t && t.data) ? t.data.length : '0';
+            } catch (_) { document.getElementById('countPacientes').textContent = '0'; }
+
+            try {
+                var a = await supabase.from('archivos_medicos').select('id');
+                document.getElementById('countExamenes').textContent = (a && a.data) ? a.data.length : '0';
+            } catch (_) { document.getElementById('countExamenes').textContent = '0'; }
+
+            document.getElementById('countPendientes').textContent = '—';
         })();
     </script>
 </body>

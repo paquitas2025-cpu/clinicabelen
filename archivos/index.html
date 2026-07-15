@@ -3,80 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel - Encargado de Archivos</title>
+    <title>Archivos · Centro Médico Belén</title>
     <link rel="stylesheet" href="../css/style.css">
     <script src="../js/config.js"></script>
 </head>
 <body>
-    <header>
-        <div>
-            <h2>Panel – Encargado de Archivos</h2>
-            <span class="user-info" id="userInfo"></span>
-        </div>
-        <button class="btn btn-danger" onclick="logout()">Cerrar sesión</button>
-    </header>
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Menú">☰</button>
 
-    <div class="container">
-        <div id="alertBox" class="alert" style="display:none;"></div>
-
-        <div class="card">
-            <h2>Subir archivo médico</h2>
-
-            <form id="uploadForm">
-                <label>Seleccionar Trabajador</label>
-                <select id="trabajador_id" required>
-                    <option value="">-- Seleccione --</option>
-                </select>
-
-                <div class="section-box">
-                    <label>CAMO</label>
-                    <input type="file" name="CAMO" accept="application/pdf">
-
-                    <label>EMO</label>
-                    <input type="file" name="EMO" accept="application/pdf">
-
-                    <label>LABORATORIO</label>
-                    <input type="file" name="LABORATORIO" accept="application/pdf">
-
-                    <label>OFTALMOLOGÍA</label>
-                    <input type="file" name="OFTALMOLOGIA" accept="application/pdf">
-
-                    <label>RESUMEN</label>
-                    <input type="file" name="RESUMEN" accept="application/pdf">
-
-                    <label>OBSERVACIONES</label>
-                    <input type="file" name="OBSERVACIONES" accept="application/pdf">
-
-                    <label>CONCLUSIONES</label>
-                    <input type="file" name="CONCLUSIONES" accept="application/pdf">
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-logo">CB</div>
+                <div class="sidebar-brand-text">
+                    <h2>Centro Médico<br>Belén</h2>
+                    <span>Gestión de Archivos</span>
                 </div>
+            </div>
 
-                <button type="submit" id="btnSubmit" class="btn btn-primary">
-                    Guardar Resultados
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name" id="sidebarUser">Archivos</div>
+                    <div class="sidebar-user-role">Encargado de Archivos</div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-section">Menú</div>
+                <a class="nav-item active" href="index.html">
+                    <span class="nav-icon">📁</span> Subir Archivos
+                </a>
+                <a class="nav-item" href="../admin/index.html">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <span>🚪</span> Cerrar Sesión
                 </button>
-            </form>
-        </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Subir Archivos Médicos</h1>
+                    <p>Carga y gestiona los documentos de los trabajadores</p>
+                </div>
+                <div class="page-header-actions">
+                    <span style="font-size:13px;color:var(--slate-500);font-weight:500;" id="fechaActual"></span>
+                </div>
+            </div>
+
+            <div id="alertBox" class="alert" style="display:none;"></div>
+
+            <div class="card" style="margin-bottom:24px;">
+                <div class="card-header">
+                    <h3>📤 Subir documentos</h3>
+                </div>
+                <div class="card-body">
+                    <form id="uploadForm">
+                        <div class="form-group">
+                            <label for="trabajador_id">Seleccionar Trabajador</label>
+                            <select id="trabajador_id" class="form-control" required>
+                                <option value="">-- Seleccione --</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-top:24px;">
+                            <p style="font-size:13px;font-weight:600;color:var(--slate-700);margin-bottom:12px;">DOCUMENTOS MÉDICOS (PDF)</p>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+                                <div class="upload-zone" style="padding:20px;text-align:left;display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="document.querySelector('input[name=\\'CAMO\\']').click()">
+                                    <div style="width:40px;height:40px;border-radius:8px;background:#e3f2fd;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📋</div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:14px;font-weight:600;color:var(--slate-800);">CAMO</div>
+                                        <div style="font-size:12px;color:var(--slate-500);">Certificado apto médico</div>
+                                    </div>
+                                    <input type="file" name="CAMO" accept="application/pdf" style="display:none;" onchange="this.closest('.upload-zone').classList.add('has-file');this.closest('.upload-zone').querySelector('.file-status').textContent=this.files[0].name">
+                                    <span class="file-status" style="font-size:11px;color:var(--slate-400);">PDF</span>
+                                </div>
+
+                                <div class="upload-zone" style="padding:20px;text-align:left;display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="document.querySelector('input[name=\\'EMO\\']').click()">
+                                    <div style="width:40px;height:40px;border-radius:8px;background:#e8f5e9;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🩺</div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:14px;font-weight:600;color:var(--slate-800);">EMO</div>
+                                        <div style="font-size:12px;color:var(--slate-500);">Examen médico ocupacional</div>
+                                    </div>
+                                    <input type="file" name="EMO" accept="application/pdf" style="display:none;" onchange="this.closest('.upload-zone').classList.add('has-file');this.closest('.upload-zone').querySelector('.file-status').textContent=this.files[0].name">
+                                    <span class="file-status" style="font-size:11px;color:var(--slate-400);">PDF</span>
+                                </div>
+
+                                <div class="upload-zone" style="padding:20px;text-align:left;display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="document.querySelector('input[name=\\'LABORATORIO\\']').click()">
+                                    <div style="width:40px;height:40px;border-radius:8px;background:#fce4ec;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🔬</div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:14px;font-weight:600;color:var(--slate-800);">Laboratorio</div>
+                                        <div style="font-size:12px;color:var(--slate-500);">Resultados de laboratorio</div>
+                                    </div>
+                                    <input type="file" name="LABORATORIO" accept="application/pdf" style="display:none;" onchange="this.closest('.upload-zone').classList.add('has-file');this.closest('.upload-zone').querySelector('.file-status').textContent=this.files[0].name">
+                                    <span class="file-status" style="font-size:11px;color:var(--slate-400);">PDF</span>
+                                </div>
+
+                                <div class="upload-zone" style="padding:20px;text-align:left;display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="document.querySelector('input[name=\\'OFTALMOLOGIA\\']').click()">
+                                    <div style="width:40px;height:40px;border-radius:8px;background:#fff3e0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">👁️</div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:14px;font-weight:600;color:var(--slate-800);">Oftalmología</div>
+                                        <div style="font-size:12px;color:var(--slate-500);">Examen de la vista</div>
+                                    </div>
+                                    <input type="file" name="OFTALMOLOGIA" accept="application/pdf" style="display:none;" onchange="this.closest('.upload-zone').classList.add('has-file');this.closest('.upload-zone').querySelector('.file-status').textContent=this.files[0].name">
+                                    <span class="file-status" style="font-size:11px;color:var(--slate-400);">PDF</span>
+                                </div>
+
+                                <div class="upload-zone" style="padding:20px;text-align:left;display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="document.querySelector('input[name=\\'RESUMEN\\']').click()">
+                                    <div style="width:40px;height:40px;border-radius:8px;background:#f3e5f5;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📝</div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:14px;font-weight:600;color:var(--slate-800);">Resumen</div>
+                                        <div style="font-size:12px;color:var(--slate-500);">Resumen de historia clínica</div>
+                                    </div>
+                                    <input type="file" name="RESUMEN" accept="application/pdf" style="display:none;" onchange="this.closest('.upload-zone').classList.add('has-file');this.closest('.upload-zone').querySelector('.file-status').textContent=this.files[0].name">
+                                    <span class="file-status" style="font-size:11px;color:var(--slate-400);">PDF</span>
+                                </div>
+
+                                <div class="upload-zone" style="padding:20px;text-align:left;display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="document.querySelector('input[name=\\'OBSERVACIONES\\']').click()">
+                                    <div style="width:40px;height:40px;border-radius:8px;background:#e0f2f1;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">💬</div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:14px;font-weight:600;color:var(--slate-800);">Observaciones</div>
+                                        <div style="font-size:12px;color:var(--slate-500);">Notas y observaciones médicas</div>
+                                    </div>
+                                    <input type="file" name="OBSERVACIONES" accept="application/pdf" style="display:none;" onchange="this.closest('.upload-zone').classList.add('has-file');this.closest('.upload-zone').querySelector('.file-status').textContent=this.files[0].name">
+                                    <span class="file-status" style="font-size:11px;color:var(--slate-400);">PDF</span>
+                                </div>
+
+                                <div class="upload-zone" style="padding:20px;text-align:left;display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="document.querySelector('input[name=\\'CONCLUSIONES\\']').click()">
+                                    <div style="width:40px;height:40px;border-radius:8px;background:#e8eaf6;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">✅</div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:14px;font-weight:600;color:var(--slate-800);">Conclusiones</div>
+                                        <div style="font-size:12px;color:var(--slate-500);">Conclusiones del examen</div>
+                                    </div>
+                                    <input type="file" name="CONCLUSIONES" accept="application/pdf" style="display:none;" onchange="this.closest('.upload-zone').classList.add('has-file');this.closest('.upload-zone').querySelector('.file-status').textContent=this.files[0].name">
+                                    <span class="file-status" style="font-size:11px;color:var(--slate-400);">PDF</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:24px;display:flex;gap:12px;align-items:center;">
+                            <button type="submit" id="btnSubmit" class="btn btn-primary btn-lg">
+                                📤 Subir Archivos Seleccionados
+                            </button>
+                            <span style="font-size:12px;color:var(--slate-400);">Máx. 10 MB por archivo · Solo PDF</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Últimas subidas -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📋 Últimos Archivos Subidos</h3>
+                </div>
+                <div class="card-body" id="ultimosArchivos">
+                    <div style="text-align:center;padding:20px;color:var(--slate-500);font-size:14px;">Cargando...</div>
+                </div>
+            </div>
+        </main>
     </div>
+
+    <style>
+        .upload-zone.has-file {
+            border-color: var(--emerald-500) !important;
+            background: var(--emerald-100) !important;
+        }
+        .upload-zone.has-file .file-status {
+            color: var(--emerald-600) !important;
+            font-weight: 600;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
 
     <script>
         const TIPOS_DOCUMENTO = [
             'CAMO', 'EMO', 'LABORATORIO', 'OFTALMOLOGIA',
             'RESUMEN', 'OBSERVACIONES', 'CONCLUSIONES'
         ];
-        const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+        const MAX_SIZE = 10 * 1024 * 1024;
 
         let profile = null;
         let trabajadores = [];
 
-        // ---- Mostrar alerta ----
         function showAlert(msg, type = 'danger') {
             const box = document.getElementById('alertBox');
             box.className = `alert alert-${type}`;
             box.textContent = msg;
-            box.style.display = 'block';
+            box.style.display = 'flex';
+            setTimeout(function () { box.style.display = 'none'; }, 6000);
         }
 
-        // ---- Cargar trabajadores ----
         async function loadTrabajadores() {
             const { data, error } = await supabase
                 .from('trabajadores')
@@ -93,7 +217,36 @@
             });
         }
 
-        // ---- Subir archivos ----
+        async function loadUltimosArchivos() {
+            const container = document.getElementById('ultimosArchivos');
+            try {
+                const { data, error } = await supabase
+                    .from('archivos_medicos')
+                    .select('id, nombre_archivo, created_at, trabajador_id, tipo_documento_id')
+                    .order('id', { ascending: false })
+                    .limit(10);
+
+                if (error) { container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--slate-500);">Error al cargar</div>'; return; }
+                if (!data || !data.length) { container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--slate-500);">Aún no hay archivos subidos</div>'; return; }
+
+                var h = '';
+                data.forEach(function (a) {
+                    var fecha = a.created_at ? new Date(a.created_at).toLocaleString() : '-';
+                    var tipo = a.tipo_documento_id || '?';
+                    h += '<div class="file-item">'
+                        + '<div class="file-icon pdf">📄</div>'
+                        + '<div class="file-info">'
+                            + '<div class="file-name">' + (a.nombre_archivo || 'Sin nombre') + '</div>'
+                            + '<div class="file-meta">Tipo #' + tipo + ' · ' + fecha + '</div>'
+                        + '</div>'
+                    + '</div>';
+                });
+                container.innerHTML = h;
+            } catch (e) {
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--slate-500);">Error al cargar</div>';
+            }
+        }
+
         async function uploadFiles(trabajadorId, empresaId) {
             const ok = [];
             const errors = [];
@@ -113,7 +266,6 @@
                     continue;
                 }
 
-                // Obtener tipo_documento_id
                 const { data: tipoRow } = await supabase
                     .from('tipos_documento')
                     .select('id')
@@ -125,12 +277,10 @@
                     continue;
                 }
 
-                // Storage path
                 const timestamp = Date.now();
                 const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
                 const storagePath = `empresa_${empresaId}/trabajador_${trabajadorId}/${codigo}/${timestamp}_${safeName}`;
 
-                // Upload a Supabase Storage
                 const { error: uploadError } = await supabase.storage
                     .from('archivos-medicos')
                     .upload(storagePath, file, {
@@ -143,7 +293,6 @@
                     continue;
                 }
 
-                // Guardar registro en archivos_medicos
                 const { error: insertError } = await supabase
                     .from('archivos_medicos')
                     .insert({
@@ -174,10 +323,20 @@
                 window.location.href = '/index.html';
                 return;
             }
-            document.getElementById('userInfo').textContent =
-                `👤 ${profile.usuario} · ${profile.rol}`;
+            document.getElementById('sidebarUser').textContent = profile.usuario;
+            document.getElementById('sidebarAvatar').textContent = profile.usuario.charAt(0).toUpperCase();
+            document.getElementById('sidebarToggle').addEventListener('click', function () {
+                document.getElementById('sidebar').classList.toggle('open');
+            });
+
+            // Fecha
+            var ahora = new Date();
+            document.getElementById('fechaActual').textContent = ahora.toLocaleDateString('es-PE', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
 
             await loadTrabajadores();
+            await loadUltimosArchivos();
         })();
 
         // ---- SUBMIT ----
@@ -185,22 +344,21 @@
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
-            btn.textContent = 'Subiendo...';
+            btn.textContent = 'Subiendo archivos...';
 
             const trabajadorId = parseInt(document.getElementById('trabajador_id').value);
             if (!trabajadorId) {
                 showAlert('Debe seleccionar un trabajador');
                 btn.disabled = false;
-                btn.textContent = 'Guardar Resultados';
+                btn.textContent = '📤 Subir Archivos Seleccionados';
                 return;
             }
 
-            // Obtener empresa del trabajador
             const trabajador = trabajadores.find(t => t.id === trabajadorId);
             if (!trabajador) {
                 showAlert('Trabajador no encontrado');
                 btn.disabled = false;
-                btn.textContent = 'Guardar Resultados';
+                btn.textContent = '📤 Subir Archivos Seleccionados';
                 return;
             }
 
@@ -214,7 +372,7 @@
             if (!empresaId) {
                 showAlert('El trabajador no tiene empresa asignada');
                 btn.disabled = false;
-                btn.textContent = 'Guardar Resultados';
+                btn.textContent = '📤 Subir Archivos Seleccionados';
                 return;
             }
 
@@ -222,11 +380,11 @@
 
             if (ok.length > 0) {
                 showAlert(`✅ ${ok.length} archivo(s) subido(s) correctamente: ${ok.join(', ')}`, 'success');
-                // Limpiar inputs
                 TIPOS_DOCUMENTO.forEach(c => {
                     const input = document.querySelector(`input[name="${c}"]`);
-                    if (input) input.value = '';
+                    if (input) { input.value = ''; input.closest('.upload-zone')?.classList.remove('has-file'); input.closest('.upload-zone')?.querySelector('.file-status')?.textContent = 'PDF'; }
                 });
+                await loadUltimosArchivos();
             }
 
             if (errors.length > 0) {
@@ -234,7 +392,7 @@
             }
 
             btn.disabled = false;
-            btn.textContent = 'Guardar Resultados';
+            btn.textContent = '📤 Subir Archivos Seleccionados';
         });
     </script>
 </body>
