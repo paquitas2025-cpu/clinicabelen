@@ -6,6 +6,19 @@
     <title>Admin · Empresas</title>
     <link rel="stylesheet" href="../css/style.css">
     <script src="../js/config.js"></script>
+    <style>
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+        .modal h3 { color: #203a43; margin-bottom: 20px; }
+        .modal .form-group { margin-bottom: 16px; }
+        .modal label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px; }
+        .modal input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+        .modal-actions .btn { width: auto; padding: 10px 24px; }
+        .btn-cancel { background: #eee; color: #333; }
+        .btn-cancel:hover { background: #ddd; }
+    </style>
 </head>
 <body>
     <div class="app-layout">
