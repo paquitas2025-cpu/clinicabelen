@@ -198,7 +198,7 @@
                 } else {
                     var password = document.getElementById('f_password').value;
                     if (!password) { showAlert('La contraseña es obligatoria'); btn.disabled = false; btn.textContent = 'Crear usuario'; return; }
-                    var email = usuario + '@clinica.local';
+                    var email = usuario + '@belen.com';
                     var r1 = await fetch(SUPABASE_URL + '/auth/v1/admin/users', { method: 'POST', headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email, password: password, email_confirm: true, user_metadata: { usuario: usuario, rol_id: rol_id, rol: roles[rol_id] } }) });
                     var d1 = await r1.json();
                     if (!r1.ok) throw new Error(d1.msg || 'Error al crear en Auth');
@@ -221,7 +221,7 @@
             try {
                 var _a = await supabase.from('usuarios').select('usuario').eq('id', id).single();
                 if (_a.error) throw _a.error;
-                var email = _a.data.usuario + '@clinica.local';
+                var email = _a.data.usuario + '@belen.com';
                 var r1 = await fetch(SUPABASE_URL + '/auth/v1/admin/users?email=' + encodeURIComponent(email), { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY } });
                 var d1 = await r1.json();
                 if (d1 && d1.users && d1.users[0]) { await fetch(SUPABASE_URL + '/auth/v1/admin/users/' + d1.users[0].id, { method: 'DELETE', headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY } }); }
