@@ -63,9 +63,7 @@
         <div class="modal">
             <h3 id="modalTitle"></h3>
             <form id="modalForm">
-                <div class="form-group"><label>Razón social</label><input type="text" id="f_nombre" required></div>
-                <div class="form-group"><label>RUC</label><input type="text" id="f_ruc"></div>
-                <div class="form-group"><label>Dirección</label><input type="text" id="f_dir"></div>
+                <div class="form-group"><label>Nombre de la empresa</label><input type="text" id="f_nombre" required></div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
                     <button type="submit" class="btn btn-primary" id="modalSubmit">Guardar</button>
@@ -130,8 +128,7 @@
                     + '</div>'
                     + '<div class="card-body">'
                         + '<h3>' + escHtml(e.nombre) + '</h3>'
-                        + '<div class="field"><div style="width:36px;height:36px;border-radius:8px;background:#f3eefc;display:flex;align-items:center;justify-content:center;">ID</div><div><strong>RUC</strong><div class="value">' + escHtml(e.ruc || '-') + '</div></div></div>'
-                        + '<div class="field"><div style="width:36px;height:36px;border-radius:8px;background:#fff2f2;display:flex;align-items:center;justify-content:center;">📍</div><div><strong>DIRECCIÓN</strong><div class="value">' + escHtml(e.direccion || '-') + '</div></div></div>'
+                        + '<div style="color:#97a0aa;font-size:14px;margin-bottom:12px;">Creada: ' + (e.created_at ? new Date(e.created_at).toLocaleDateString() : '-') + '</div>'
                         + '<div class="stats">'
                             + '<div class="mini-stat"><div class="ico">👤</div><div><div class="num">' + usersCount + '</div><div style="font-size:12px;color:#97a0aa;">USUARIOS</div></div></div>'
                             + '<div class="mini-stat"><div class="ico">👥</div><div><div class="num">' + trabCount + '</div><div style="font-size:12px;color:#97a0aa;">TRABAJADORES</div></div></div>'
@@ -154,8 +151,6 @@
             document.getElementById('modalTitle').textContent = data ? 'Editar Empresa' : 'Nueva Empresa';
             document.getElementById('modalSubmit').textContent = data ? 'Guardar cambios' : 'Crear';
             document.getElementById('f_nombre').value = data ? data.nombre : '';
-            document.getElementById('f_ruc').value = data ? (data.ruc || '') : '';
-            document.getElementById('f_dir').value = data ? (data.direccion || '') : '';
         }
 
         function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); editingId = null; }
@@ -165,9 +160,7 @@
             var btn = document.getElementById('modalSubmit'); btn.disabled = true; btn.textContent = 'Guardando...';
             try {
                 var nombre = document.getElementById('f_nombre').value.trim();
-                var ruc = document.getElementById('f_ruc').value.trim();
-                var dir = document.getElementById('f_dir').value.trim();
-                if (!nombre) { showAlert('La razón social es obligatoria'); btn.disabled = false; btn.textContent = editingId ? 'Guardar cambios' : 'Crear'; return; }
+                if (!nombre) { showAlert('El nombre es obligatorio'); btn.disabled = false; btn.textContent = editingId ? 'Guardar cambios' : 'Crear'; return; }
 
                 var url = SUPABASE_URL + '/rest/v1/empresas';
                 if (editingId) {
@@ -175,7 +168,7 @@
                     var res = await fetch(url, {
                         method: 'PATCH',
                         headers: authHeaders(),
-                        body: JSON.stringify({ nombre: nombre, ruc: ruc, direccion: dir })
+                        body: JSON.stringify({ nombre: nombre })
                     });
                     if (!res.ok) { var e = await res.json(); throw new Error(e.message || 'Error al actualizar'); }
                     showAlert('Empresa actualizada', 'success');
@@ -183,7 +176,7 @@
                     var res = await fetch(url, {
                         method: 'POST',
                         headers: authHeaders(),
-                        body: JSON.stringify({ nombre: nombre, ruc: ruc, direccion: dir })
+                        body: JSON.stringify({ nombre: nombre })
                     });
                     if (!res.ok) { var e = await res.json(); throw new Error(e.message || 'Error al crear'); }
                     showAlert('Empresa creada', 'success');
