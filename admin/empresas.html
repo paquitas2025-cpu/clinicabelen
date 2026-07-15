@@ -8,29 +8,47 @@
     <script src="../js/config.js"></script>
 </head>
 <body>
-    <header style="display:none"></header>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="brand"><div style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:800;">A</div> Archivos</div>
+            <div style="font-size:13px; opacity:0.85;">Centro Médico Belén</div>
+            <nav>
+                <a class="nav-item" href="index.html"><span class="icon">🏠</span> <span>Dashboard</span></a>
+                <a class="nav-item" href="trabajadores.html"><span class="icon">👷</span> <span>Trabajadores</span></a>
+                <a class="nav-item" href="usuarios.html"><span class="icon">👤</span> <span>Usuarios</span></a>
+                <a class="nav-item active" href="empresas.html"><span class="icon">🏢</span> <span>Empresas</span></a>
+                <a class="nav-item" href="../archivos/index.html"><span class="icon">📁</span> <span>Subir Archivos</span></a>
+            </nav>
 
-    <div class="container">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-            <div>
-                <h2 style="margin:0;">Gestión de Empresas</h2>
-                <p style="color:#98a6b2; margin-top:6px;">Administra las empresas registradas en el sistema</p>
+            <div class="user-block">
+                <div class="name" id="sidebarUser">Usuario</div>
+                <div style="font-size:13px; opacity:0.85;">Encargado de Archivos</div>
+                <button class="logout" onclick="logout()">Cerrar Sesión</button>
             </div>
-            <div>
-                <button class="btn btn-primary" onclick="openModal()" style="display:inline-flex; align-items:center; gap:10px; padding:10px 18px; border-radius:12px;"><span style="font-size:18px;">+</span> Nueva Empresa</button>
+        </aside>
+
+        <main class="main-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                <div>
+                    <h2 style="margin:0;">Gestión de Empresas</h2>
+                    <p style="color:#98a6b2; margin-top:6px;">Administra las empresas registradas en el sistema</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" id="btnNewCompany" style="display:inline-flex; align-items:center; gap:10px; padding:10px 18px; border-radius:12px;"><span style="font-size:18px;">+</span> Nueva Empresa</button>
+                </div>
             </div>
-        </div>
 
-        <div id="alertBox" class="alert alert-danger" style="display:none; margin-top:14px;"></div>
+            <div id="alertBox" class="alert alert-danger" style="display:none; margin-top:14px;"></div>
 
-        <div class="companies-grid" id="companiesGrid"></div>
+            <div class="companies-grid" id="companiesGrid"></div>
+        </main>
     </div>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <h3 id="modalTitle"></h3>
             <form id="modalForm">
-                <div class="form-group"><label>Nombre de la empresa</label><input type="text" id="f_nombre" required></div>
+                <div class="form-group"><label>Razón social</label><input type="text" id="f_nombre" required></div>
                 <div class="form-group"><label>RUC</label><input type="text" id="f_ruc"></div>
                 <div class="form-group"><label>Dirección</label><input type="text" id="f_dir"></div>
                 <div class="modal-actions">
@@ -60,7 +78,14 @@
             var res = await supabase.from('empresas').select('*').order('id', { ascending: true });
             if (res.error) { grid.innerHTML = '<div class="empty-state">Error al cargar empresas</div>'; return; }
             var data = res.data || [];
-            if (!data.length) { grid.innerHTML = '<div class="empty-state">No hay empresas</div>'; return; }
+            if (!data.length) {
+                grid.innerHTML = '<div class="empty-state" style="padding:40px;text-align:center;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(20,30,60,0.04);">'
+                    + '<h3 style="color:#203a43;margin-bottom:8px;">Aquí puedes agregar empresas</h3>'
+                    + '<p style="color:#97a0aa;margin-bottom:18px;">Aún no se han registrado empresas. Presiona el botón para crear la primera empresa en el sistema.</p>'
+                    + '<button class="btn btn-primary" onclick="openModal()">Nueva Empresa</button>'
+                + '</div>';
+                return;
+            }
 
             await Promise.all(data.map(async function (e) {
                 var usersCount = 0, trabCount = 0;
@@ -117,7 +142,7 @@
                 var nombre = document.getElementById('f_nombre').value.trim();
                 var ruc = document.getElementById('f_ruc').value.trim();
                 var dir = document.getElementById('f_dir').value.trim();
-                if (!nombre) { showAlert('El nombre es obligatorio'); btn.disabled = false; btn.textContent = editingId ? 'Guardar cambios' : 'Crear'; return; }
+                if (!nombre) { showAlert('La razón social es obligatoria'); btn.disabled = false; btn.textContent = editingId ? 'Guardar cambios' : 'Crear'; return; }
                 if (editingId) {
                     var upd = await supabase.from('empresas').update({ nombre: nombre, ruc: ruc, direccion: dir }).eq('id', editingId);
                     if (upd.error) throw upd.error;
@@ -150,6 +175,9 @@
         (async function () {
             var session = await checkAuth(); if (!session) return;
             var profile = await getUserProfile(); if (!profile || profile.rol_id !== 1) { window.location.href = '/index.html'; return; }
+            document.getElementById('sidebarUser').textContent = profile.usuario;
+            // vincular botón superior
+            var btn = document.getElementById('btnNewCompany'); if (btn) btn.addEventListener('click', function(){ openModal(); });
             renderCompanies();
         })();
     </script>
