@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin · Usuarios</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/config.js"></script>
+    <style>
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f4f6f9; font-weight: 600; color: #203a43; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; }
+        td { font-size: 14px; }
+        tr:hover td { background: #f8f9fc; }
+        .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 6px; border: none; cursor: pointer; width: auto; font-weight: 600; }
+        .btn-add { background: #203a43; color: white; padding: 10px 20px; }
+        .btn-add:hover { opacity: .9; }
+        .btn-edit { background: #2d6a9f; color: white; }
+        .btn-delete { background: #c0392b; color: white; }
+        .back-link { color: #203a43; text-decoration: none; font-weight: 600; font-size: 14px; }
+        .back-link:hover { text-decoration: underline; }
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-admin { background: #203a43; color: white; }
+        .badge-medico { background: #2d6a9f; color: white; }
+        .badge-archivos { background: #e67e22; color: white; }
+        .badge-active { background: #27ae60; color: white; }
+        .badge-inactive { background: #ccc; color: #666; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+        .modal h3 { color: #203a43; margin-bottom: 20px; }
+        .modal .form-group { margin-bottom: 16px; }
+        .modal label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px; }
+        .modal input, .modal select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+        .modal-actions .btn { width: auto; padding: 10px 24px; }
+        .btn-cancel { background: #eee; color: #333; }
+        .btn-cancel:hover { background: #ddd; }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h2>Gestión de Usuarios</h2>
+            <span class="user-info" id="userInfo"></span>
+        </div>
+        <button class="btn btn-danger" onclick="logout()">Cerrar sesión</button>
+    </header>
+
+    <div class="container">
+        <a href="index.html" class="back-link">← Volver al dashboard</a>
+        <div id="alertBox" class="alert alert-danger" style="display:none;"></div>
+
+        <div class="toolbar">
+            <h2 style="margin:0;">Usuarios</h2>
+            <button class="btn btn-add" onclick="openModal()">+ Nuevo Usuario</button>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Usuario</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+                </thead>
+                <tbody id="tablaBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3 id="modalTitle"></h3>
+            <form id="modalForm">
+                <div class="form-group"><label>Usuario</label><input type="text" id="f_usuario" required></div>
+                <div class="form-group" id="pwGroup"><label>Contraseña</label><input type="password" id="f_password" minlength="6"></div>
+                <div class="form-group">
+                    <label>Rol</label>
+                    <select id="f_rol_id">
+                        <option value="1">Administrativo</option>
+                        <option value="2">Médico</option>
+                        <option value="3">Archivos</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select id="f_estado">
+                        <option value="1">Activo</option>
+                        <option value="0">Inactivo</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="modalSubmit">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtcXF5YnpucHlwZHdmc2N1emR1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDA0NjI3NywiZXhwIjoyMDk5NjIyMjc3fQ.lwY-bTlP_0cQuIxVbWu45V3VQj_ftfBc1b2IlsXYatA';
+        var editingId = null;
+
+        function showAlert(msg, type) {
+            var box = document.getElementById('alertBox');
+            box.className = 'alert alert-' + (type || 'danger');
+            box.textContent = msg;
+            box.style.display = 'block';
+            setTimeout(function () { box.style.display = 'none'; }, 5000);
+        }
+
+        function escHtml(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+
+        async function cargar() {
+            var _a = await supabase.from('usuarios').select('id, usuario, rol_id, rol, estado').order('id', { ascending: true });
+            var data = _a.data, error = _a.error;
+            var tbody = document.getElementById('tablaBody');
+            if (error) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Error al cargar</td></tr>'; return; }
+            if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay usuarios</td></tr>'; return; }
+            var h = '';
+            data.forEach(function (u) {
+                var rc = u.rol_id === 1 ? 'badge-admin' : u.rol_id === 2 ? 'badge-medico' : 'badge-archivos';
+                var ec = u.estado === 1 ? 'badge-active' : 'badge-inactive';
+                h += '<tr><td>' + u.id + '</td><td><strong>' + escHtml(u.usuario) + '</strong></td><td><span class="badge ' + rc + '">' + escHtml(u.rol) + '</span></td><td><span class="badge ' + ec + '">' + (u.estado === 1 ? 'Activo' : 'Inactivo') + '</span></td><td><button class="btn-sm btn-edit" onclick="editar(' + u.id + ')">Editar</button> <button class="btn-sm btn-delete" onclick="eliminar(' + u.id + ')">Eliminar</button></td></tr>';
+            });
+            tbody.innerHTML = h;
+        }
+
+        function openModal(data) {
+            editingId = data ? data.id : null;
+            document.getElementById('modalOverlay').classList.add('open');
+            document.getElementById('modalTitle').textContent = data ? 'Editar Usuario' : 'Nuevo Usuario';
+            document.getElementById('modalSubmit').textContent = data ? 'Guardar cambios' : 'Crear';
+            document.getElementById('f_usuario').value = data ? data.usuario : '';
+            document.getElementById('f_password').value = '';
+            document.getElementById('f_password').required = !data;
+            document.getElementById('pwGroup').style.display = data ? 'none' : '';
+            document.getElementById('f_rol_id').value = data ? data.rol_id : 1;
+            document.getElementById('f_estado').value = data ? data.estado : 1;
+        }
+
+        function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); editingId = null; }
+
+        document.getElementById('modalForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var btn = document.getElementById('modalSubmit');
+            btn.disabled = true; btn.textContent = 'Guardando...';
+            try {
+                var usuario = document.getElementById('f_usuario').value.trim();
+                var rol_id = parseInt(document.getElementById('f_rol_id').value);
+                var estado = parseInt(document.getElementById('f_estado').value);
+                var roles = { 1: 'administrativo', 2: 'medico', 3: 'archivos' };
+                if (editingId) {
+                    var _a = await supabase.from('usuarios').update({ usuario: usuario, rol_id: rol_id, rol: roles[rol_id], estado: estado }).eq('id', editingId);
+                    if (_a.error) throw _a.error;
+                    showAlert('Usuario actualizado', 'success');
+                } else {
+                    var password = document.getElementById('f_password').value;
+                    if (!password) { showAlert('La contraseña es obligatoria'); btn.disabled = false; btn.textContent = 'Crear'; return; }
+                    var email = usuario + '@clinica.local';
+                    var r1 = await fetch(SUPABASE_URL + '/auth/v1/admin/users', { method: 'POST', headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email, password: password, email_confirm: true, user_metadata: { usuario: usuario, rol_id: rol_id, rol: roles[rol_id] } }) });
+                    var d1 = await r1.json();
+                    if (!r1.ok) throw new Error(d1.msg || 'Error al crear en Auth');
+                    var _b = await supabase.from('usuarios').insert({ usuario: usuario, password: '', rol_id: rol_id, rol: roles[rol_id], estado: estado });
+                    if (_b.error) throw _b.error;
+                    showAlert('Usuario creado', 'success');
+                }
+                closeModal(); cargar();
+            } catch (err) { showAlert('Error: ' + (err.message || 'Desconocido')); } finally { btn.disabled = false; btn.textContent = editingId ? 'Guardar cambios' : 'Crear'; }
+        });
+
+        async function editar(id) {
+            var _a = await supabase.from('usuarios').select('*').eq('id', id).single();
+            if (_a.error) { showAlert('Error al cargar'); return; }
+            openModal(_a.data);
+        }
+
+        async function eliminar(id) {
+            if (!confirm('¿Eliminar este usuario? También se eliminará del sistema de autenticación.')) return;
+            try {
+                var _a = await supabase.from('usuarios').select('usuario').eq('id', id).single();
+                if (_a.error) throw _a.error;
+                var email = _a.data.usuario + '@clinica.local';
+                var r1 = await fetch(SUPABASE_URL + '/auth/v1/admin/users?email=' + encodeURIComponent(email), { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY } });
+                var d1 = await r1.json();
+                if (d1 && d1.users && d1.users[0]) { await fetch(SUPABASE_URL + '/auth/v1/admin/users/' + d1.users[0].id, { method: 'DELETE', headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY } }); }
+                var _b = await supabase.from('usuarios').delete().eq('id', id);
+                if (_b.error) throw _b.error;
+                showAlert('Usuario eliminado', 'success'); cargar();
+            } catch (err) { showAlert('Error: ' + (err.message || 'Desconocido')); }
+        }
+
+        (async function () {
+            var session = await checkAuth();
+            if (!session) return;
+            var profile = await getUserProfile();
+            if (!profile || profile.rol_id !== 1) { window.location.href = '/index.html'; return; }
+            document.getElementById('userInfo').textContent = profile.usuario + ' · ' + profile.rol;
+            cargar();
+        })();
+    </script>
+</body>
+</html>
