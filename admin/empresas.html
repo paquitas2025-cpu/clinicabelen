@@ -6,61 +6,24 @@
     <title>Admin · Empresas</title>
     <link rel="stylesheet" href="../css/style.css">
     <script src="../js/config.js"></script>
-    <style>
-        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
-        .table-wrap { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f4f6f9; font-weight: 600; color: #203a43; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; }
-        td { font-size: 14px; }
-        tr:hover td { background: #f8f9fc; }
-        .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 6px; border: none; cursor: pointer; width: auto; font-weight: 600; }
-        .btn-add { background: #203a43; color: white; padding: 10px 20px; }
-        .btn-add:hover { opacity: .9; }
-        .btn-edit { background: #2d6a9f; color: white; }
-        .btn-delete { background: #c0392b; color: white; }
-        .back-link { color: #203a43; text-decoration: none; font-weight: 600; font-size: 14px; }
-        .back-link:hover { text-decoration: underline; }
-        .empty-state { text-align: center; padding: 40px; color: #999; }
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-overlay.open { display: flex; }
-        .modal { background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
-        .modal h3 { color: #203a43; margin-bottom: 20px; }
-        .modal .form-group { margin-bottom: 16px; }
-        .modal label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px; }
-        .modal input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
-        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
-        .modal-actions .btn { width: auto; padding: 10px 24px; }
-        .btn-cancel { background: #eee; color: #333; }
-        .btn-cancel:hover { background: #ddd; }
-    </style>
 </head>
 <body>
-    <header>
-        <div>
-            <h2>Gestión de Empresas</h2>
-            <span class="user-info" id="userInfo"></span>
-        </div>
-        <button class="btn btn-danger" onclick="logout()">Cerrar sesión</button>
-    </header>
+    <header style="display:none"></header>
 
     <div class="container">
-        <a href="index.html" class="back-link">← Volver al dashboard</a>
-        <div id="alertBox" class="alert alert-danger" style="display:none;"></div>
-
-        <div class="toolbar">
-            <h2 style="margin:0;">Empresas</h2>
-            <button class="btn btn-add" onclick="openModal()">+ Nueva Empresa</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <div>
+                <h2 style="margin:0;">Gestión de Empresas</h2>
+                <p style="color:#98a6b2; margin-top:6px;">Administra las empresas registradas en el sistema</p>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="openModal()" style="display:inline-flex; align-items:center; gap:10px; padding:10px 18px; border-radius:12px;"><span style="font-size:18px;">+</span> Nueva Empresa</button>
+            </div>
         </div>
 
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr><th>ID</th><th>Nombre</th><th>Creado</th><th>Acciones</th></tr>
-                </thead>
-                <tbody id="tablaBody"></tbody>
-            </table>
-        </div>
+        <div id="alertBox" class="alert alert-danger" style="display:none; margin-top:14px;"></div>
+
+        <div class="companies-grid" id="companiesGrid"></div>
     </div>
 
     <div class="modal-overlay" id="modalOverlay">
@@ -68,6 +31,8 @@
             <h3 id="modalTitle"></h3>
             <form id="modalForm">
                 <div class="form-group"><label>Nombre de la empresa</label><input type="text" id="f_nombre" required></div>
+                <div class="form-group"><label>RUC</label><input type="text" id="f_ruc"></div>
+                <div class="form-group"><label>Dirección</label><input type="text" id="f_dir"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
                     <button type="submit" class="btn btn-primary" id="modalSubmit">Guardar</button>
@@ -89,18 +54,48 @@
 
         function escHtml(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
 
-        async function cargar() {
-            var _a = await supabase.from('empresas').select('id, nombre, created_at').order('id', { ascending: true });
-            var data = _a.data, error = _a.error;
-            var tbody = document.getElementById('tablaBody');
-            if (error) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Error al cargar</td></tr>'; return; }
-            if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No hay empresas</td></tr>'; return; }
-            var h = '';
-            data.forEach(function (e) {
-                var f = e.created_at ? new Date(e.created_at).toLocaleDateString() : '-';
-                h += '<tr><td>' + e.id + '</td><td><strong>' + escHtml(e.nombre) + '</strong></td><td>' + f + '</td><td><button class="btn-sm btn-edit" onclick="editar(' + e.id + ')">Editar</button> <button class="btn-sm btn-delete" onclick="eliminar(' + e.id + ')">Eliminar</button></td></tr>';
-            });
-            tbody.innerHTML = h;
+        async function renderCompanies() {
+            var grid = document.getElementById('companiesGrid');
+            grid.innerHTML = '';
+            var res = await supabase.from('empresas').select('*').order('id', { ascending: true });
+            if (res.error) { grid.innerHTML = '<div class="empty-state">Error al cargar empresas</div>'; return; }
+            var data = res.data || [];
+            if (!data.length) { grid.innerHTML = '<div class="empty-state">No hay empresas</div>'; return; }
+
+            await Promise.all(data.map(async function (e) {
+                var usersCount = 0, trabCount = 0;
+                try {
+                    var u = await supabase.from('usuarios').select('id').eq('empresa_id', e.id);
+                    usersCount = (u && u.data) ? u.data.length : 0;
+                } catch (_) { usersCount = 0; }
+                try {
+                    var t = await supabase.from('trabajadores').select('id').eq('empresa_id', e.id);
+                    trabCount = (t && t.data) ? t.data.length : 0;
+                } catch (_) { trabCount = 0; }
+
+                var html = '<div class="company-card">'
+                    + '<div class="card-top">'
+                        + '<div class="logo">🏢</div>'
+                        + '<div class="badge">ACTIVA</div>'
+                    + '</div>'
+                    + '<div class="card-body">'
+                        + '<h3>' + escHtml(e.nombre) + '</h3>'
+                        + '<div class="field"><div style="width:36px;height:36px;border-radius:8px;background:#f3eefc;display:flex;align-items:center;justify-content:center;">ID</div><div><strong>RUC</strong><div class="value">' + escHtml(e.ruc || '-') + '</div></div></div>'
+                        + '<div class="field"><div style="width:36px;height:36px;border-radius:8px;background:#fff2f2;display:flex;align-items:center;justify-content:center;">📍</div><div><strong>DIRECCIÓN</strong><div class="value">' + escHtml(e.direccion || '-') + '</div></div></div>'
+                        + '<div class="stats">'
+                            + '<div class="mini-stat"><div class="ico">👤</div><div><div class="num">' + usersCount + '</div><div style="font-size:12px;color:#97a0aa;">USUARIOS</div></div></div>'
+                            + '<div class="mini-stat"><div class="ico">👥</div><div><div class="num">' + trabCount + '</div><div style="font-size:12px;color:#97a0aa;">TRABAJADORES</div></div></div>'
+                        + '</div>'
+                        + '<div class="actions">'
+                            + '<button class="btn-edit" onclick="editar(' + e.id + ')">✏️ Editar</button>'
+                            + '<button class="btn-deactivate" onclick="desactivar(' + e.id + ')">🔒 Desactivar</button>'
+                        + '</div>'
+                    + '</div>'
+                + '</div>';
+
+                var div = document.createElement('div'); div.innerHTML = html;
+                grid.appendChild(div.firstChild);
+            }));
         }
 
         function openModal(data) {
@@ -109,50 +104,53 @@
             document.getElementById('modalTitle').textContent = data ? 'Editar Empresa' : 'Nueva Empresa';
             document.getElementById('modalSubmit').textContent = data ? 'Guardar cambios' : 'Crear';
             document.getElementById('f_nombre').value = data ? data.nombre : '';
+            document.getElementById('f_ruc').value = data ? (data.ruc || '') : '';
+            document.getElementById('f_dir').value = data ? (data.direccion || '') : '';
         }
 
         function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); editingId = null; }
 
-        document.getElementById('modalForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            var btn = document.getElementById('modalSubmit');
-            btn.disabled = true; btn.textContent = 'Guardando...';
+        document.getElementById('modalForm').addEventListener('submit', async function (ev) {
+            ev.preventDefault();
+            var btn = document.getElementById('modalSubmit'); btn.disabled = true; btn.textContent = 'Guardando...';
             try {
                 var nombre = document.getElementById('f_nombre').value.trim();
+                var ruc = document.getElementById('f_ruc').value.trim();
+                var dir = document.getElementById('f_dir').value.trim();
                 if (!nombre) { showAlert('El nombre es obligatorio'); btn.disabled = false; btn.textContent = editingId ? 'Guardar cambios' : 'Crear'; return; }
                 if (editingId) {
-                    var _a = await supabase.from('empresas').update({ nombre: nombre }).eq('id', editingId);
-                    if (_a.error) throw _a.error;
+                    var upd = await supabase.from('empresas').update({ nombre: nombre, ruc: ruc, direccion: dir }).eq('id', editingId);
+                    if (upd.error) throw upd.error;
                     showAlert('Empresa actualizada', 'success');
                 } else {
-                    var _b = await supabase.from('empresas').insert({ nombre: nombre });
-                    if (_b.error) throw _b.error;
+                    var ins = await supabase.from('empresas').insert({ nombre: nombre, ruc: ruc, direccion: dir });
+                    if (ins.error) throw ins.error;
                     showAlert('Empresa creada', 'success');
                 }
-                closeModal(); cargar();
+                closeModal(); renderCompanies();
             } catch (err) { showAlert('Error: ' + (err.message || 'Desconocido')); } finally { btn.disabled = false; btn.textContent = editingId ? 'Guardar cambios' : 'Crear'; }
         });
 
         async function editar(id) {
-            var _a = await supabase.from('empresas').select('*').eq('id', id).single();
-            if (_a.error) { showAlert('Error al cargar'); return; }
-            openModal(_a.data);
+            var r = await supabase.from('empresas').select('*').eq('id', id).single();
+            if (r.error) { showAlert('Error al cargar'); return; }
+            openModal(r.data);
         }
 
-        async function eliminar(id) {
-            if (!confirm('¿Eliminar esta empresa?')) return;
-            var _a = await supabase.from('empresas').delete().eq('id', id);
-            if (_a.error) { showAlert('Error: ' + (_a.error.message || 'Tiene trabajadores asociados')); return; }
-            showAlert('Empresa eliminada', 'success'); cargar();
+        async function desactivar(id) {
+            if (!confirm('¿Desactivar esta empresa?')) return;
+            // Aquí cambiamos un flag 'activa' si existe, si no, borramos
+            try {
+                var upd = await supabase.from('empresas').update({ activa: false }).eq('id', id);
+                if (upd.error) throw upd.error;
+                showAlert('Empresa desactivada', 'success'); renderCompanies();
+            } catch (e) { showAlert('Error: ' + (e.message || 'Desconocido')); }
         }
 
         (async function () {
-            var session = await checkAuth();
-            if (!session) return;
-            var profile = await getUserProfile();
-            if (!profile || profile.rol_id !== 1) { window.location.href = '/index.html'; return; }
-            document.getElementById('userInfo').textContent = profile.usuario + ' · ' + profile.rol;
-            cargar();
+            var session = await checkAuth(); if (!session) return;
+            var profile = await getUserProfile(); if (!profile || profile.rol_id !== 1) { window.location.href = '/index.html'; return; }
+            renderCompanies();
         })();
     </script>
 </body>
