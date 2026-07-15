@@ -73,7 +73,17 @@
     </div>
 
     <script>
+        var SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtcXF5YnpucHlwZHdmc2N1emR1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDA0NjI3NywiZXhwIjoyMDk5NjIyMjc3fQ.lwY-bTlP_0cQuIxVbWu45V3VQj_ftfBc1b2IlsXYatA';
         var editingId = null;
+
+        function authHeaders() {
+            return {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': 'Bearer ' + SERVICE_ROLE_KEY,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            };
+        }
 
         function showAlert(msg, type) {
             var box = document.getElementById('alertBox');
@@ -156,13 +166,24 @@
                 var ruc = document.getElementById('f_ruc').value.trim();
                 var dir = document.getElementById('f_dir').value.trim();
                 if (!nombre) { showAlert('La razón social es obligatoria'); btn.disabled = false; btn.textContent = editingId ? 'Guardar cambios' : 'Crear'; return; }
+
+                var url = SUPABASE_URL + '/rest/v1/empresas';
                 if (editingId) {
-                    var upd = await supabase.from('empresas').update({ nombre: nombre, ruc: ruc, direccion: dir }).eq('id', editingId);
-                    if (upd.error) throw upd.error;
+                    url += '?id=eq.' + editingId;
+                    var res = await fetch(url, {
+                        method: 'PATCH',
+                        headers: authHeaders(),
+                        body: JSON.stringify({ nombre: nombre, ruc: ruc, direccion: dir })
+                    });
+                    if (!res.ok) { var e = await res.json(); throw new Error(e.message || 'Error al actualizar'); }
                     showAlert('Empresa actualizada', 'success');
                 } else {
-                    var ins = await supabase.from('empresas').insert({ nombre: nombre, ruc: ruc, direccion: dir });
-                    if (ins.error) throw ins.error;
+                    var res = await fetch(url, {
+                        method: 'POST',
+                        headers: authHeaders(),
+                        body: JSON.stringify({ nombre: nombre, ruc: ruc, direccion: dir })
+                    });
+                    if (!res.ok) { var e = await res.json(); throw new Error(e.message || 'Error al crear'); }
                     showAlert('Empresa creada', 'success');
                 }
                 closeModal(); renderCompanies();
@@ -177,10 +198,13 @@
 
         async function desactivar(id) {
             if (!confirm('¿Desactivar esta empresa?')) return;
-            // Aquí cambiamos un flag 'activa' si existe, si no, borramos
             try {
-                var upd = await supabase.from('empresas').update({ activa: false }).eq('id', id);
-                if (upd.error) throw upd.error;
+                var res = await fetch(SUPABASE_URL + '/rest/v1/empresas?id=eq.' + id, {
+                    method: 'PATCH',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ activa: false })
+                });
+                if (!res.ok) { var e = await res.json(); throw new Error(e.message); }
                 showAlert('Empresa desactivada', 'success'); renderCompanies();
             } catch (e) { showAlert('Error: ' + (e.message || 'Desconocido')); }
         }
