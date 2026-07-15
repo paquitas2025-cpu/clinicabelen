@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sistema Médico</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.min.js"></script>
     <script src="js/config.js"></script>
 </head>
 <body class="login-body">
@@ -34,59 +34,71 @@
         const btnLogin = document.getElementById('btnLogin');
 
         form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            alertBox.style.display = 'none';
-            btnLogin.disabled = true;
-            btnLogin.textContent = 'Ingresando...';
+            try {
+                e.preventDefault();
+                alertBox.style.display = 'none';
+                btnLogin.disabled = true;
+                btnLogin.textContent = 'Ingresando...';
 
-            const usuario = document.getElementById('usuario').value.trim();
-            const password = document.getElementById('password').value;
+                if (typeof supabase === 'undefined' || !supabase) {
+                    throw new Error('La librería de Supabase no cargó. Probá limpiar la caché del navegador (Ctrl+F5).');
+                }
 
-            // El usuario se loguea con email: {usuario}@clinica.local
-            const email = `${usuario}@clinica.local`;
+                const usuario = document.getElementById('usuario').value.trim();
+                const password = document.getElementById('password').value;
+                const email = `${usuario}@clinica.local`;
 
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
 
-            if (error) {
-                alertBox.textContent = 'Usuario o contraseña incorrectos';
+                if (error) {
+                    alertBox.textContent = 'Usuario o contraseña incorrectos';
+                    alertBox.style.display = 'block';
+                    btnLogin.disabled = false;
+                    btnLogin.textContent = 'Ingresar';
+                    return;
+                }
+
+                const profile = await getUserProfile();
+                if (!profile) {
+                    await supabase.auth.signOut();
+                    alertBox.textContent = 'Error al obtener perfil de usuario. ¿Ya ejecutaste el SQL de inicialización en Supabase?';
+                    alertBox.style.display = 'block';
+                    btnLogin.disabled = false;
+                    btnLogin.textContent = 'Ingresar';
+                    return;
+                }
+
+                const rutas = {
+                    1: '/admin/',
+                    2: '/medico/',
+                    3: '/archivos/',
+                };
+                window.location.href = rutas[profile.rol_id] || '/index.html';
+            } catch (err) {
+                console.error('Error en login:', err);
+                alertBox.textContent = 'Error inesperado: ' + err.message;
                 alertBox.style.display = 'block';
                 btnLogin.disabled = false;
                 btnLogin.textContent = 'Ingresar';
-                return;
             }
-
-            // Obtener perfil para saber el rol
-            const profile = await getUserProfile();
-            if (!profile) {
-                await supabase.auth.signOut();
-                alertBox.textContent = 'Error al obtener perfil de usuario';
-                alertBox.style.display = 'block';
-                btnLogin.disabled = false;
-                btnLogin.textContent = 'Ingresar';
-                return;
-            }
-
-            const rutas = {
-                1: '/admin/',
-                2: '/medico/',
-                3: '/archivos/',
-            };
-            window.location.href = rutas[profile.rol_id] || '/index.html';
         });
 
         // Si ya hay sesión activa, redirigir
         (async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                const profile = await getUserProfile();
-                if (profile) {
-                    const rutas = { 1: '/admin/', 2: '/medico/', 3: '/archivos/' };
-                    window.location.href = rutas[profile.rol_id] || '/index.html';
+            try {
+                if (typeof supabase === 'undefined' || !supabase) return;
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    const profile = await getUserProfile();
+                    if (profile) {
+                        const rutas = { 1: '/admin/', 2: '/medico/', 3: '/archivos/' };
+                        window.location.href = rutas[profile.rol_id] || '/index.html';
+                    }
                 }
-            }
+            } catch (_) { /* silencioso */ }
         })();
     </script>
 </body>
