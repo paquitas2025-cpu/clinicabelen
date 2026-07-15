@@ -106,6 +106,16 @@ var supabase = {
                 prefer = 'return=representation';
                 return builder;
             },
+            update: function (data) {
+                method = 'PATCH';
+                body = JSON.stringify(data);
+                prefer = 'return=representation';
+                return builder;
+            },
+            delete: function () {
+                method = 'DELETE';
+                return builder;
+            },
             then: function (resolve, reject) {
                 (async function () {
                     try {
@@ -115,12 +125,9 @@ var supabase = {
                         }
                         if (prefer) headers['Prefer'] = prefer;
 
-                        var url;
-                        if (method === 'GET') {
-                            url = SUPABASE_URL + '/rest/v1/' + table + '?' + params.toString();
-                        } else {
-                            url = SUPABASE_URL + '/rest/v1/' + table;
-                        }
+                        var qs = params.toString();
+                        var url = SUPABASE_URL + '/rest/v1/' + table;
+                        if (qs) url += '?' + qs;
 
                         var res = await fetch(url, {
                             method: method,
