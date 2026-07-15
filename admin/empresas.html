@@ -18,6 +18,8 @@
         .modal-actions .btn { width: auto; padding: 10px 24px; }
         .btn-cancel { background: #eee; color: #333; }
         .btn-cancel:hover { background: #ddd; }
+        .btn-delete { background: #c0392b; color: white; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+        .btn-delete:hover { opacity: .9; }
     </style>
 </head>
 <body>
@@ -136,7 +138,7 @@
                         + '</div>'
                         + '<div class="actions">'
                             + '<button class="btn-edit" onclick="editar(' + e.id + ')">✏️ Editar</button>'
-                            + '<button class="btn-deactivate" onclick="desactivar(' + e.id + ')">🔒 Desactivar</button>'
+                            + '<button class="btn-delete" onclick="eliminar(' + e.id + ')">🗑️ Eliminar</button>'
                         + '</div>'
                     + '</div>'
                 + '</div>';
@@ -196,16 +198,15 @@
             openModal(r.data);
         }
 
-        async function desactivar(id) {
-            if (!confirm('¿Desactivar esta empresa?')) return;
+        async function eliminar(id) {
+            if (!confirm('¿Eliminar esta empresa?\nLos trabajadores asociados quedarán sin empresa.')) return;
             try {
                 var res = await fetch(SUPABASE_URL + '/rest/v1/empresas?id=eq.' + id, {
-                    method: 'PATCH',
-                    headers: authHeaders(),
-                    body: JSON.stringify({ activa: false })
+                    method: 'DELETE',
+                    headers: authHeaders()
                 });
-                if (!res.ok) { var e = await res.json(); throw new Error(e.message); }
-                showAlert('Empresa desactivada', 'success'); renderCompanies();
+                if (!res.ok) { var e = await res.json(); throw new Error(e.message || 'Error al eliminar'); }
+                showAlert('Empresa eliminada', 'success'); renderCompanies();
             } catch (e) { showAlert('Error: ' + (e.message || 'Desconocido')); }
         }
 
